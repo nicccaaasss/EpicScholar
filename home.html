@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EpicScholar | Home</title>
+  <style>
+    body {
+      background: #000;
+      color: white;
+      font-family: "Poppins", sans-serif;
+      padding: 20px;
+    }
+    a {
+      color: #66aaff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome, <span id="username"></span>!</h1>
+  <p>
+    Go to <a href="message.html">Messages</a>
+  </p>
+  <button id="logoutBtn">Log Out</button>
+
+  <script>
+    // Get logged-in user
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser) {
+      alert("You're not logged in!");
+      window.location.href = "index.html";
+    } else {
+      document.getElementById("username").textContent = loggedInUser.epicid;
+    }
+
+    // Log out button
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
