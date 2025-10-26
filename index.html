@@ -5,154 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EpicScholar | Login</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Poppins", sans-serif;
-    }
-
-    body {
-      background: #000;
-      color: white;
-      height: 100vh;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 5%;
-    }
-
-    .left {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .left h1 {
-      font-size: 5rem;
-      font-weight: 700;
-      background: linear-gradient(90deg, #ff416c, #0072ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: gradientFlow 5s ease infinite;
-      background-size: 200% 200%;
-    }
-
-    @keyframes gradientFlow {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    .right {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .box {
-      background: black;
-      backdrop-filter: blur(12px);
-      padding: 30px 35px;
-      border-radius: 20px;
-      width: 340px;
-      text-align: center;
-      transition: all 0.5s ease;
-    }
-
-    .box h2 {
-      margin-bottom: 20px;
-      font-size: 24px;
-    }
-
-    .input-box {
-      text-align: left;
-      margin-bottom: 15px;
-      background-color: transparent;
-    }
-
-    .input-box label {
-      font-size: 14px;
-      color: #ccc;
-    }
-
-    .input-box input,
-    .input-box select {
-      width: 100%;
-      padding: 10px;
-      border: solid 1px white;
-      border-radius: 10px;
-      margin-top: 5px;
-      outline: none;
-      background-color: transparent;
-      color: white;
-    }
-
-    .message {
-      font-size: 13px;
-      margin-top: 5px;
-      color: red;
-      min-height: 16px;
-    }
-
-    .success {
-      color: #4ade80;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(45deg, #ff416c, #0072ff);
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-      transition: 0.3s;
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
-    }
-
-    .switch {
-      margin-top: 15px;
-      font-size: 13px;
-    }
-
-    .switch a {
-      color: #66aaff;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .switch a:hover {
-      text-decoration: underline;
-    }
-
-    .status {
-      font-size: 13px;
-      margin-top: 10px;
-      color: #4ade80;
-      min-height: 18px;
-    }
-
-    .countdown {
-      color: #ffcc00;
-      margin-top: 5px;
-    }
-
-    .resend-btn {
-      background: none;
-      border: none;
-      color: #66aaff;
-      cursor: pointer;
-      font-size: 13px;
-      margin-top: 5px;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins",sans-serif;}
+    body {background:#000; color:white; height:100vh; display:flex; justify-content:space-between; align-items:center; padding:0 5%;}
+    .left {flex:1; display:flex; justify-content:center; align-items:center;}
+    .left h1 {font-size:5rem; font-weight:700; background:linear-gradient(90deg,#ff416c,#0072ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation:gradientFlow 5s ease infinite; background-size:200% 200%;}
+    @keyframes gradientFlow {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .right {flex:1; display:flex; justify-content:center; align-items:center;}
+    .box {background:black; backdrop-filter:blur(12px); padding:30px 35px; border-radius:20px; width:340px; text-align:center; transition:all 0.5s ease;}
+    .box h2 {margin-bottom:20px; font-size:24px;}
+    .input-box {text-align:left; margin-bottom:15px; background-color:transparent;}
+    .input-box label {font-size:14px; color:#ccc;}
+    .input-box input, .input-box select {width:100%; padding:10px; border:solid 1px white; border-radius:10px; margin-top:5px; outline:none; background-color:transparent; color:white;}
+    .message {font-size:13px; margin-top:5px; color:red; min-height:16px;}
+    .success {color:#4ade80;}
+    .btn {width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px; background:linear-gradient(45deg,#ff416c,#0072ff); color:white; cursor:pointer; font-size:16px; transition:0.3s;}
+    .btn:hover {transform:scale(1.05);}
+    .switch {margin-top:15px; font-size:13px;}
+    .switch a {color:#66aaff; text-decoration:none; cursor:pointer;}
+    .switch a:hover {text-decoration:underline;}
   </style>
 </head>
 <body>
@@ -165,9 +35,9 @@
     <div class="box" id="loginBox">
       <h2>Welcome to EpicScholar</h2>
       <div class="input-box">
-        <label>Gmail ID</label>
-        <input type="email" id="loginEmail" placeholder="Enter your Gmail ID" />
-        <div id="loginEmailMsg" class="message"></div>
+        <label>Full Name</label>
+        <input type="text" id="loginFullName" placeholder="Enter your full name" />
+        <div id="loginFullNameMsg" class="message"></div>
       </div>
       <div class="input-box">
         <label>Password</label>
@@ -175,7 +45,6 @@
         <div id="loginPassMsg" class="message"></div>
       </div>
       <button class="btn" id="loginBtn">Sign In</button>
-      <div id="loginStatus" class="status"></div>
       <div class="switch">
         New here? <a id="toSignup" href="#">Create account</a>
       </div>
@@ -186,11 +55,11 @@
       <h2>Sign Up</h2>
       <div class="input-box">
         <label>Full Name</label>
-        <input type="text" id="name" placeholder="Enter your name" />
-        <div id="nameMsg" class="message"></div>
+        <input type="text" id="fullname" placeholder="Enter your full name" />
+        <div id="fullnameMsg" class="message"></div>
       </div>
       <div class="input-box">
-        <label>Gmail ID</label>
+        <label>Email (Gmail)</label>
         <input type="email" id="email" placeholder="Enter your Gmail ID" />
         <div id="emailMsg" class="message"></div>
       </div>
@@ -219,10 +88,8 @@
         </select>
         <div id="syllabusMsg" class="message"></div>
       </div>
+      <div id="emailVerifyMsg" class="message"></div>
       <button class="btn" id="signupBtn">Create Account</button>
-      <div id="signupStatus" class="status"></div>
-      <div id="countdown" class="countdown"></div>
-      <button id="resendEmail" class="resend-btn" style="display:none;">Resend Email</button>
       <div class="switch">
         Already have an account? <a id="toLogin" href="#">Sign In</a>
       </div>
@@ -230,132 +97,148 @@
   </div>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    
-    const supabaseUrl = "https://bipgnekdneqimjopldqo.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcGduZWtkbmVxaW1qb3BsZHFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzODExNTQsImV4cCI6MjA3Njk1NzE1NH0.KN5x779xsaJD6Aw9W6Q9I_E4DvlM7bAG7LilsW0GGtU"; // 🔒 Replace with your anon key
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
+const SUPABASE_URL = 'https://bqsqefovxijeibxhujfh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxc3FlZm92eGlqZWlieGh1amZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MTIxMTYsImV4cCI6MjA3Njk4ODExNn0.fA1bpP6G4e58n647CM0E1-Qx70X90771r38nHYNDBWw';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Screen toggles
-    document.getElementById("toSignup").addEventListener("click", e => {
-      e.preventDefault();
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("signupBox").style.display = "block";
-      clearMessages();
-    });
-    document.getElementById("toLogin").addEventListener("click", e => {
-      e.preventDefault();
-      document.getElementById("signupBox").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
-      clearMessages();
-    });
+// Toggle screens
+document.getElementById("toSignup").addEventListener("click", e => {
+  e.preventDefault();
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("signupBox").style.display = "block";
+  clearMessages();
+});
+document.getElementById("toLogin").addEventListener("click", e => {
+  e.preventDefault();
+  document.getElementById("signupBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+  clearMessages();
+});
 
-    function clearMessages() {
-      document.querySelectorAll(".message, .status, .countdown").forEach(el => el.textContent = "");
+function clearMessages() {
+  document.querySelectorAll(".message").forEach(el => el.textContent = "");
+}
+
+// SIGNUP
+async function handleSignup() {
+  clearMessages();
+  const fullname = document.getElementById("fullname").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const dob = document.getElementById("dob").value;
+  const grade = document.getElementById("grade").value;
+  const syllabus = document.getElementById("syllabus").value;
+  let valid = true;
+
+  if (!fullname) { document.getElementById("fullnameMsg").textContent="Full Name required"; valid=false; }
+  if (!email) { document.getElementById("emailMsg").textContent="Email required"; valid=false; }
+  if (!password) { document.getElementById("passwordMsg").textContent="Password required"; valid=false; }
+  if (!dob) { document.getElementById("dobMsg").textContent="DOB required"; valid=false; }
+  if (!grade) { document.getElementById("gradeMsg").textContent="Grade required"; valid=false; }
+  if (!syllabus) { document.getElementById("syllabusMsg").textContent="Select syllabus"; valid=false; }
+  if (!valid) return;
+
+  // Signup in Supabase auth
+
+  // SIGNUP
+const { data, error } = await supabase.auth.signUp(
+  {
+    email: email,
+    password: password
+  },
+  {
+    redirectTo: 'file:///Users/YourName/Projects/EpicScholar/index.html'
+// change port/path if needed
+  }
+);
+
+  const { data: signupData, error: signupError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullname } }
+  });
+  if (signupError) { document.getElementById("emailMsg").textContent = signupError.message; return; }
+
+  // Insert in users table
+  const { error: tableError } = await supabase.from('users').insert([
+    { id: signupData.user.id, full_name: fullname, gmail: email, dob, grade, syllabus }
+  ]);
+  if (tableError) { document.getElementById("emailMsg").textContent = tableError.message; return; }
+
+  // Verification animation and resend
+  // Verification message with timer and resend
+const msgEl = document.getElementById("emailVerifyMsg");
+msgEl.innerHTML = `Email sent! ⏳ Verify within <span id="timer">30</span> sec.
+                    <div><button id="resendBtn" class="btn" disabled style="margin-top:5px;">Resend</button></div>`;
+
+let timeLeft = 30;
+const timerEl = document.getElementById("timer");
+const resendBtn = document.getElementById("resendBtn");
+
+const countdown = setInterval(() => {
+  timeLeft--;
+  timerEl.textContent = timeLeft;
+  if (timeLeft <= 0) {
+    clearInterval(countdown);
+    resendBtn.disabled = false;
+  }
+}, 1000);
+
+resendBtn.addEventListener("click", async () => {
+  resendBtn.disabled = true;
+  timeLeft = 30;
+  timerEl.textContent = timeLeft;
+
+  // Resend verification email
+  const { data, error } = await supabase.auth.resendVerificationEmail(email);
+  if (error) alert(error.message);
+
+  // Restart timer
+  const newCountdown = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(newCountdown);
+      resendBtn.disabled = false;
     }
+  }, 1000);
+});
 
-    const signupBtn = document.getElementById("signupBtn");
-    const signupStatus = document.getElementById("signupStatus");
-    const countdownEl = document.getElementById("countdown");
-    const resendBtn = document.getElementById("resendEmail");
-    let timer;
 
-    signupBtn.addEventListener("click", async () => {
-      clearMessages();
-      const name = document.getElementById("name").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const dob = document.getElementById("dob").value;
-      const grade = document.getElementById("grade").value;
-      const syllabus = document.getElementById("syllabus").value;
+  setTimeout(() => {
+    document.getElementById("signupBox").style.display="none";
+    document.getElementById("loginBox").style.display="block";
+    clearMessages();
+  }, 35000);
+}
 
-      if (!name || !email || !password || !dob || !grade || !syllabus) {
-        signupStatus.textContent = "All fields are required.";
-        signupStatus.style.color = "red";
-        return;
-      }
+// LOGIN
+async function handleLogin() {
+  clearMessages();
+  const fullname = document.getElementById("loginFullName").value.trim();
+  const password = document.getElementById("loginPass").value.trim();
+  if (!fullname || !password) {
+    if (!fullname) document.getElementById("loginFullNameMsg").textContent="Full Name required";
+    if (!password) document.getElementById("loginPassMsg").textContent="Password required";
+    return;
+  }
 
-      if (!email.endsWith("@gmail.com")) {
-        signupStatus.textContent = "Please use a valid Gmail address.";
-        signupStatus.style.color = "red";
-        return;
-      }
+  const { data: userProfile, error: lookupError } = await supabase.from('users').select('gmail').eq('full_name', fullname).single();
+  if (lookupError || !userProfile) { document.getElementById("loginFullNameMsg").textContent="Full Name not found"; return; }
 
-      signupStatus.textContent = "Sending verification email...";
-      signupStatus.style.color = "#ffcc00";
+  const { data, error } = await supabase.auth.signInWithPassword({ email: userProfile.gmail, password });
+  if (error) { document.getElementById("loginFullNameMsg").textContent = error.message; return; }
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name, dob, grade, syllabus },
-          emailRedirectTo: window.location.origin + "/home.html"
-        }
-      });
+  localStorage.setItem("loggedInUser", JSON.stringify(userProfile));
+  document.getElementById("loginFullNameMsg").textContent="Login successful!";
+  document.getElementById("loginFullNameMsg").classList.add("success");
+  setTimeout(() => window.location.href="home.html", 800);
+}
 
-      if (error) {
-        signupStatus.textContent = `Error: ${error.message}`;
-        signupStatus.style.color = "red";
-      } else {
-        signupStatus.textContent = "✅ Verification email sent! Please verify within 30 seconds.";
-        signupStatus.style.color = "#4ade80";
-        startCountdown(30);
-      }
-    });
-
-    function startCountdown(seconds) {
-      let remaining = seconds;
-      resendBtn.style.display = "none";
-      countdownEl.textContent = `⏳ ${remaining}s remaining to verify.`;
-      timer = setInterval(() => {
-        remaining--;
-        countdownEl.textContent = `⏳ ${remaining}s remaining to verify.`;
-        if (remaining <= 0) {
-          clearInterval(timer);
-          countdownEl.textContent = "Didn't receive the email?";
-          resendBtn.style.display = "block";
-        }
-      }, 1000);
-    }
-
-    resendBtn.addEventListener("click", () => {
-      clearInterval(timer);
-      document.getElementById("signupBtn").click();
-      resendBtn.style.display = "none";
-    });
-
-    // LOGIN
-    const loginBtn = document.getElementById("loginBtn");
-    const loginStatus = document.getElementById("loginStatus");
-
-    loginBtn.addEventListener("click", async () => {
-      clearMessages();
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPass").value.trim();
-
-      if (!email || !password) {
-        loginStatus.textContent = "Email and password are required.";
-        loginStatus.style.color = "red";
-        return;
-      }
-
-      loginStatus.textContent = "Signing in...";
-      loginStatus.style.color = "#ffcc00";
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        loginStatus.textContent = `Error: ${error.message}`;
-        loginStatus.style.color = "red";
-      } else {
-        loginStatus.textContent = "✅ Login successful!";
-        loginStatus.style.color = "#4ade80";
-        localStorage.setItem("loggedInUser", JSON.stringify(data.user));
-        setTimeout(() => (window.location.href = "home.html"), 1000);
-      }
-    });
-  </script>
+document.getElementById("signupBtn").addEventListener("click", handleSignup);
+document.getElementById("loginBtn").addEventListener("click", handleLogin);
+</script>
 </body>
 </html>
