@@ -147,26 +147,6 @@
       currentUser:{id:'user123',name:'Student',initials:'SS'}
     };
 
-    function createWelcomePost(){
-      const c=document.createElement('canvas');c.width=800;c.height=500;const ctx=c.getContext('2d');ctx.fillStyle='#111';ctx.fillRect(0,0,800,500);ctx.fillStyle='rgba(255,255,255,0.08)';ctx.font='48px sans-serif';ctx.fillText('Welcome to EpicScholar!',30,280);
-      state.posts.push({
-        id:'welcome',author:'School',authorId:'school',authorInitials:'SC',time:Date.now(),
-        caption:'Share your learning journey',url:c.toDataURL(),type:'image',
-        likes:5,loves:2,comments:[{by:'Admin', byInitials:'A', text:'Welcome to the platform!'}],
-        likedBy: [], lovedBy: []
-      });
-      // Add a dummy video post for testing the new controls
-      state.posts.push({
-        id:'video-demo',author:'Admin',authorId:'admin',authorInitials:'AD',time:Date.now() - 3600000,
-        caption:'Custom Video Player Demo (No video file attached, just a placeholder for the URL to trigger the player)',
-        url:'https://example.com/placeholder.mp4', // Placeholder URL
-        type:'video',
-        likes:10,loves:5,comments:[{by:'Student', byInitials:'S', text:'The new player looks cool!'}],
-        likedBy: [], lovedBy: []
-      });
-    }
-    createWelcomePost();
-
     function escapeHtml(s){return String(s).replace(/[&"'<>]/g,c=>({"&":"&amp;","\"":"&quot;","'":"&#39;","<":"&lt;",">":"&gt;"}[c]))}
     
     // Helper function to format seconds into MM:SS
