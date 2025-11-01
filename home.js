@@ -105,73 +105,81 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-// ✅ Post Upload Logic
-const uploadBtn = document.getElementById("uploadBtn");
+const postForm = document.getElementById("postForm");
 const fileInput = document.getElementById("fileInput");
 const captionInput = document.getElementById("captionInput");
-const postsContainer = document.getElementById("postsContainer"); // Your main feed section
+const feedContainer = document.getElementById("feedContainer");
 
-// Make sure these exist in your HTML
-if (uploadBtn && fileInput && captionInput && postsContainer) {
-  uploadBtn.addEventListener("click", async () => {
-    const file = fileInput.files[0];
-    const caption = captionInput.value.trim();
+postForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    if (!file) return alert("Please choose a photo or video!");
-    if (!caption) return alert("Add a caption!");
+  const user = supabase.auth.getUser();
+  if (!user) {
+    alert("Please login first!");
+    return;
+  }
 
-    // Upload to Supabase Storage
-    const filePath = `${loggedInUser.id}/${Date.now()}_${file.name}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("posts") // name of your bucket in Supabase Storage
-      .upload(filePath, file);
+  const file = fileInput.files[0];
+  const caption = captionInput.value.trim();
 
-    if (uploadError) {
-      console.error("Upload failed:", uploadError);
-      alert("Upload failed!");
-      return;
-    }
+  if (!file) {
+    alert("Select a file to upload!");
+    return;
+  }
 
-    const { data: urlData } = supabase.storage
-      .from("posts")
-      .getPublicUrl(filePath);
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}_${user.data.user.id}.${fileExt}`;
+  const filePath = `${fileName}`;
 
-    const fileUrl = urlData.publicUrl;
-    const fileType = file.type.startsWith("video") ? "video" : "image";
+  // Upload to Supabase Storage
+  const { error: uploadError } = await supabase.storage
+    .from("posts")
+    .upload(filePath, file);
 
-    // Insert post record
-    const { error: insertError } = await supabase.from("posts").insert([
-      {
-        author_id: loggedInUser.id,
-        author_name: loggedInUser.full_name,
-        author_initials: loggedInUser.full_name
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase(),
-        caption: caption,
-        url: fileUrl,
-        type: fileType,
-      },
-    ]);
+  if (uploadError) {
+    console.error("Upload failed:", uploadError);
+    alert("Upload failed. Try again.");
+    return;
+  }
 
-    if (insertError) {
-      console.error("Post insert error:", insertError);
-      alert("Could not save post!");
-    } else {
-      alert("✅ Post uploaded successfully!");
-      captionInput.value = "";
-      fileInput.value = "";
-      loadPosts(); // refresh feed
-    }
-  });
-}
-// ✅ Fetch and render posts
-async function loadPosts() {
-  const postsContainer = document.getElementById("postsContainer");
-  if (!postsContainer) return;
+  const { data: publicUrlData } = supabase.storage
+    .from("posts")
+    .getPublicUrl(filePath);
 
-  postsContainer.innerHTML = "<p style='color:#aaa;'>Loading posts...</p>";
+  const type = file.type.startsWith("video") ? "video" : "image";
+  const authorName = user.data.user.user_metadata?.name || "Unknown";
+  const initials = authorName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+
+  // Insert post record
+  const { error: insertError } = await supabase.from("posts").insert([
+    {
+      author_id: user.data.user.id,
+      author_name: authorName,
+      author_initials: initials,
+      caption: caption,
+      url: publicUrlData.publicUrl,
+      type: type,
+    },
+  ]);
+
+  if (insertError) {
+    console.error("Insert failed:", insertError);
+    alert("Failed to post.");
+    return;
+  }
+
+  captionInput.value = "";
+  fileInput.value = "";
+  renderFeed(); // refresh feed
+});
+
+// ---------- Render Feed ----------
+async function renderFeed() {
+  feedContainer.innerHTML = "<div class='loading'>Loading posts...</div>";
 
   const { data: posts, error } = await supabase
     .from("posts")
@@ -179,49 +187,50 @@ async function loadPosts() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error loading posts:", error);
-    postsContainer.innerHTML = "<p style='color:red;'>Failed to load posts.</p>";
+    console.error("Error fetching posts:", error);
+    feedContainer.innerHTML =
+      "<div class='error-text'>⚠️ Failed to load feed. Try again later.</div>";
     return;
   }
 
-  postsContainer.innerHTML = "";
+  if (!posts || posts.length === 0) {
+    feedContainer.innerHTML = `
+      <div style="
+        color: white;
+        text-align: center;
+        padding: 40px 0;
+        font-size: 18px;
+        opacity: 0.8;
+      ">
+        🎉 You’re all caught up!
+      </div>`;
+    return;
+  }
+
+  feedContainer.innerHTML = "";
 
   posts.forEach((post) => {
     const postEl = document.createElement("div");
     postEl.className = "post-card";
-    postEl.style = `
-      background: rgba(255,255,255,0.05);
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 16px;
-      color: #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    `;
-
     postEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="background:#128C7E;color:#fff;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;">
-          ${post.author_initials}
-        </div>
-        <div>
-          <div style="font-weight:600;">${post.author_name}</div>
-          <div style="font-size:12px;color:#aaa;">${new Date(
-            post.created_at
-          ).toLocaleString()}</div>
-        </div>
+      <div class="post-header">
+        <div class="author-initials">${post.author_initials}</div>
+        <div class="author-name">${post.author_name}</div>
       </div>
-
+      <div class="post-caption">${post.caption}</div>
       ${
         post.type === "video"
-          ? `<video controls style="width:100%;border-radius:10px;" src="${post.url}"></video>`
-          : `<img src="${post.url}" style="width:100%;border-radius:10px;">`
+          ? `<video controls src="${post.url}" class="post-video"></video>`
+          : `<img src="${post.url}" class="post-image" />`
       }
-
-      <p style="margin-top:8px;">${post.caption}</p>
+      <div class="post-actions">
+        <button class="like-btn">❤️ ${post.likes}</button>
+        <button class="love-btn">💖 ${post.loves}</button>
+      </div>
     `;
-
-    postsContainer.appendChild(postEl);
+    feedContainer.appendChild(postEl);
   });
 }
 
-window.addEventListener("DOMContentLoaded", loadPosts);
+// ---------- Call Feed Render on Page Load ----------
+renderFeed();
