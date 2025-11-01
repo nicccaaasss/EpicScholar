@@ -105,19 +105,15 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+// ✅ Elements
 const postForm = document.getElementById("postForm");
 const fileInput = document.getElementById("fileInput");
 const captionInput = document.getElementById("captionInput");
 const feedContainer = document.getElementById("feedContainer");
 
+// ✅ Upload new post
 postForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  const user = supabase.auth.getUser();
-  if (!user) {
-    alert("Please login first!");
-    return;
-  }
 
   const file = fileInput.files[0];
   const caption = captionInput.value.trim();
@@ -128,8 +124,8 @@ postForm.addEventListener("submit", async (e) => {
   }
 
   const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}_${user.data.user.id}.${fileExt}`;
-  const filePath = `${fileName}`;
+  const fileName = `${Date.now()}_${loggedInUser.id}.${fileExt}`;
+  const filePath = `${loggedInUser.id}/${fileName}`;
 
   // Upload to Supabase Storage
   const { error: uploadError } = await supabase.storage
@@ -147,22 +143,21 @@ postForm.addEventListener("submit", async (e) => {
     .getPublicUrl(filePath);
 
   const type = file.type.startsWith("video") ? "video" : "image";
-  const authorName = user.data.user.user_metadata?.name || "Unknown";
-  const initials = authorName
+  const initials = loggedInUser.full_name
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase();
 
-  // Insert post record
+  // Insert post into database
   const { error: insertError } = await supabase.from("posts").insert([
     {
-      author_id: user.data.user.id,
-      author_name: authorName,
+      author_id: loggedInUser.id,
+      author_name: loggedInUser.full_name,
       author_initials: initials,
-      caption: caption,
+      caption,
       url: publicUrlData.publicUrl,
-      type: type,
+      type,
     },
   ]);
 
@@ -174,22 +169,26 @@ postForm.addEventListener("submit", async (e) => {
 
   captionInput.value = "";
   fileInput.value = "";
-  renderFeed(); // refresh feed
+
+  alert("✅ Post uploaded!");
+  renderFeed();
 });
 
-// ---------- Render Feed ----------
+// ✅ Render feed (show others’ posts only)
 async function renderFeed() {
-  feedContainer.innerHTML = "<div class='loading'>Loading posts...</div>";
+  feedContainer.innerHTML =
+    "<div class='loading' style='color:white;text-align:center;padding:30px;'>Loading posts...</div>";
 
   const { data: posts, error } = await supabase
     .from("posts")
     .select("*")
+    .neq("author_id", loggedInUser.id) // exclude own posts
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching posts:", error);
     feedContainer.innerHTML =
-      "<div class='error-text'>⚠️ Failed to load feed. Try again later.</div>";
+      "<div style='color:red;text-align:center;'>⚠️ Failed to load feed.</div>";
     return;
   }
 
@@ -210,6 +209,9 @@ async function renderFeed() {
   feedContainer.innerHTML = "";
 
   posts.forEach((post) => {
+    const liked = post.liked_by?.includes(loggedInUser.id) || false;
+    const loved = post.loved_by?.includes(loggedInUser.id) || false;
+
     const postEl = document.createElement("div");
     postEl.className = "post-card";
     postEl.innerHTML = `
@@ -224,13 +226,75 @@ async function renderFeed() {
           : `<img src="${post.url}" class="post-image" />`
       }
       <div class="post-actions">
-        <button class="like-btn">❤️ ${post.likes}</button>
-        <button class="love-btn">💖 ${post.loves}</button>
+        <button class="like-btn ${liked ? "active" : ""}" onclick="toggleLike('${
+      post.id
+    }')">❤️ ${post.likes}</button>
+        <button class="love-btn ${loved ? "active" : ""}" onclick="toggleLove('${
+      post.id
+    }')">💖 ${post.loves}</button>
       </div>
     `;
     feedContainer.appendChild(postEl);
   });
 }
 
-// ---------- Call Feed Render on Page Load ----------
+// ✅ Like system
+async function toggleLike(postId) {
+  const { data: post, error } = await supabase
+    .from("posts")
+    .select("*")
+    .eq("id", postId)
+    .single();
+
+  if (error) return console.error(error);
+
+  let liked_by = post.liked_by || [];
+  let likes = post.likes;
+
+  if (liked_by.includes(loggedInUser.id)) {
+    liked_by = liked_by.filter((id) => id !== loggedInUser.id);
+    likes--;
+  } else {
+    liked_by.push(loggedInUser.id);
+    likes++;
+  }
+
+  const { error: updateError } = await supabase
+    .from("posts")
+    .update({ likes, liked_by })
+    .eq("id", postId);
+
+  if (!updateError) renderFeed();
+}
+
+// ✅ Love system
+async function toggleLove(postId) {
+  const { data: post, error } = await supabase
+    .from("posts")
+    .select("*")
+    .eq("id", postId)
+    .single();
+
+  if (error) return console.error(error);
+
+  let loved_by = post.loved_by || [];
+  let loves = post.loves;
+
+  if (loved_by.includes(loggedInUser.id)) {
+    loved_by = loved_by.filter((id) => id !== loggedInUser.id);
+    loves--;
+  } else {
+    loved_by.push(loggedInUser.id);
+    loves++;
+  }
+
+  const { error: updateError } = await supabase
+    .from("posts")
+    .update({ loves, loved_by })
+    .eq("id", postId);
+
+  if (!updateError) renderFeed();
+}
+
+// ✅ Initial load
 renderFeed();
