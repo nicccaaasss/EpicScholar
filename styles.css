@@ -253,7 +253,7 @@
     align-items: center;
     z-index: 9999;
     transition: opacity 1s ease-in-out;
-    color: ;
+    color:linear-gradient(90deg, #ff416c, #0072ff) ;
 }
 .intro-text {
     font-size: 2rem;
