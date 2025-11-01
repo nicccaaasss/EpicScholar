@@ -105,3 +105,123 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+// ✅ Post Upload Logic
+const uploadBtn = document.getElementById("uploadBtn");
+const fileInput = document.getElementById("fileInput");
+const captionInput = document.getElementById("captionInput");
+const postsContainer = document.getElementById("postsContainer"); // Your main feed section
+
+// Make sure these exist in your HTML
+if (uploadBtn && fileInput && captionInput && postsContainer) {
+  uploadBtn.addEventListener("click", async () => {
+    const file = fileInput.files[0];
+    const caption = captionInput.value.trim();
+
+    if (!file) return alert("Please choose a photo or video!");
+    if (!caption) return alert("Add a caption!");
+
+    // Upload to Supabase Storage
+    const filePath = `${loggedInUser.id}/${Date.now()}_${file.name}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("posts") // name of your bucket in Supabase Storage
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error("Upload failed:", uploadError);
+      alert("Upload failed!");
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("posts")
+      .getPublicUrl(filePath);
+
+    const fileUrl = urlData.publicUrl;
+    const fileType = file.type.startsWith("video") ? "video" : "image";
+
+    // Insert post record
+    const { error: insertError } = await supabase.from("posts").insert([
+      {
+        author_id: loggedInUser.id,
+        author_name: loggedInUser.full_name,
+        author_initials: loggedInUser.full_name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase(),
+        caption: caption,
+        url: fileUrl,
+        type: fileType,
+      },
+    ]);
+
+    if (insertError) {
+      console.error("Post insert error:", insertError);
+      alert("Could not save post!");
+    } else {
+      alert("✅ Post uploaded successfully!");
+      captionInput.value = "";
+      fileInput.value = "";
+      loadPosts(); // refresh feed
+    }
+  });
+}
+// ✅ Fetch and render posts
+async function loadPosts() {
+  const postsContainer = document.getElementById("postsContainer");
+  if (!postsContainer) return;
+
+  postsContainer.innerHTML = "<p style='color:#aaa;'>Loading posts...</p>";
+
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading posts:", error);
+    postsContainer.innerHTML = "<p style='color:red;'>Failed to load posts.</p>";
+    return;
+  }
+
+  postsContainer.innerHTML = "";
+
+  posts.forEach((post) => {
+    const postEl = document.createElement("div");
+    postEl.className = "post-card";
+    postEl.style = `
+      background: rgba(255,255,255,0.05);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 16px;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    `;
+
+    postEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="background:#128C7E;color:#fff;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;">
+          ${post.author_initials}
+        </div>
+        <div>
+          <div style="font-weight:600;">${post.author_name}</div>
+          <div style="font-size:12px;color:#aaa;">${new Date(
+            post.created_at
+          ).toLocaleString()}</div>
+        </div>
+      </div>
+
+      ${
+        post.type === "video"
+          ? `<video controls style="width:100%;border-radius:10px;" src="${post.url}"></video>`
+          : `<img src="${post.url}" style="width:100%;border-radius:10px;">`
+      }
+
+      <p style="margin-top:8px;">${post.caption}</p>
+    `;
+
+    postsContainer.appendChild(postEl);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", loadPosts);
