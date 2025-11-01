@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile | EpicScholar</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #0e0e0e, #1a1a1a);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .profile-container {
+      width: 90%;
+      max-width: 700px;
+      background: rgba(30, 30, 30, 0.6);
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      color: #f1f1f1;
+    }
+
+    .profile-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .profile-header h2 {
+      margin: 10px 0;
+      font-size: 1.8rem;
+      background: linear-gradient(90deg, #00f0ff, #ff0099);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .profile-info p {
+      margin: 5px 0;
+      color: #ccc;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 20px 0;
+    }
+
+    .posts-container h3 {
+      margin-bottom: 15px;
+      color: #00f0ff;
+    }
+
+    .post {
+      background: rgba(50, 50, 50, 0.7);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: 0.3s;
+    }
+
+    .post:hover {
+      background: rgba(70, 70, 70, 0.8);
+      transform: scale(1.02);
+    }
+
+    .post h4 {
+      margin: 0 0 5px 0;
+      color: #ffd700;
+    }
+
+    .post small {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-container">
+    <div class="profile-header">
+      <h2 id="userName">Loading...</h2>
+    </div>
+
+    <div class="profile-info">
+      <p id="userEmail"></p>
+      <p id="userDob"></p>
+      <p id="userGrade"></p>
+      <p id="userSyllabus"></p>
+    </div>
+
+    <hr />
+
+    <div class="posts-container" id="postsContainer">
+      <h3>User Posts</h3>
+      <p>Loading posts...</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const SUPABASE_URL = "https://bipgnekdneqimjopldqo.supabase.co";
+const SUPABASE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcGduZWtkbmVxaW1qb3BsZHFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzODExNTQsImV4cCI6MjA3Njk1NzE1NH0.KN5x779xsaJD6Aw9W6Q9I_E4DvlM7bAG7LilsW0GGtU";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get("id");
+
+    // Load user info
+    async function loadUser() {
+      const { data, error } = await supabase
+        .from("users")
+        .select("full_name, gmail, dob, grade, syllabus")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error loading user:", error);
+        document.getElementById("userName").textContent = "User not found";
+        return;
+      }
+
+      document.getElementById("userName").textContent = data.full_name || "No name";
+      document.getElementById("userEmail").textContent = "📧 " + (data.gmail || "Not provided");
+      document.getElementById("userDob").textContent = "🎂 DOB: " + (data.dob || "Unknown");
+      document.getElementById("userGrade").textContent = "🎓 Grade: " + (data.grade || "N/A");
+      document.getElementById("userSyllabus").textContent = "📘 Syllabus: " + (data.syllabus || "N/A");
+    }
+
+    // Load posts
+    async function loadPosts() {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("author_id", userId)
+        .order("created_at", { ascending: false });
+
+      const container = document.getElementById("postsContainer");
+      container.innerHTML = "<h3>User Posts</h3>";
+
+      if (error) {
+        console.error("Error loading posts:", error);
+        container.innerHTML += "<p>Couldn't load posts.</p>";
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        container.innerHTML += "<p>No posts yet.</p>";
+        return;
+      }
+
+      data.forEach(post => {
+        const postDiv = document.createElement("div");
+        postDiv.className = "post";
+        postDiv.innerHTML = `
+          <h4>${post.author_name || "Anonymous"}</h4>
+          <p>${post.caption || ""}</p>
+          <small>${new Date(post.created_at).toLocaleString()}</small>
+        `;
+        container.appendChild(postDiv);
+      });
+    }
+
+    loadUser();
+    loadPosts();
+  </script>
+</body>
+</html>

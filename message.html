@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages | EpicScholar</title>
+</head>
+<style>
+  body { font-family: "Poppins", sans-serif; background: #000; color: white; padding: 20px; }
+    input { width: 100%; padding: 10px; border-radius: 10px; border: none; margin-bottom: 10px; }
+    .user { padding: 10px; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 5px; cursor: pointer; background: #111; }
+    .user:hover { background: #222; }
+</style>
+<body>
+  <h2>Search Users</h2>
+  <input type="text" id="searchUser" placeholder="Type name or grade">
+  <ul id="searchResults"></ul>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabaseUrl = "https://bipgnekdneqimjopldqo.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcGduZWtkbmVxaW1qb3BsZHFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzODExNTQsImV4cCI6MjA3Njk1NzE1NH0.KN5x779xsaJD6Aw9W6Q9I_E4DvlM7bAG7LilsW0GGtU";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+if (!loggedInUser) {
+  alert("Please log in first!");
+  window.location.href = "index.html";
+}
+
+const searchInput = document.getElementById("searchUser");
+const results = document.getElementById("searchResults");
+
+searchInput.addEventListener("input", async () => {
+  const query = searchInput.value.trim();
+  results.innerHTML = "";
+
+  if (!query) return;
+
+  const { data: users, error } = await supabase
+    .from("users")
+    .select("*")
+    .ilike("full_name", `%${query}%`)
+    .neq("id", loggedInUser.id); // don't show yourself
+
+  if (error) return console.error(error);
+
+  users.forEach(user => {
+    const li = document.createElement("li");
+    li.textContent = `${user.full_name} (${user.grade}th)`;
+    li.style.cursor = "pointer";
+    li.addEventListener("click", () => {
+      // Save selected user in localStorage as JSON
+      localStorage.setItem("chatWith", JSON.stringify(user));
+      window.location.href = "chat.html";
+    });
+    results.appendChild(li);
+  });
+});
+</script>
+</body>
+</html>

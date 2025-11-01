@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat | EpicScholar</title>
+<style>
+  body { margin:0; font-family:"Poppins",sans-serif; background-color:#e5ddd5; }
+  .chat-container { width:400px; max-width:100%; height:600px; margin:50px auto; display:flex; flex-direction:column; border:1px solid #ccc; background-color:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
+  .chat-header { padding:15px; background-color:#075e54; color:#fff; font-weight:bold; display:flex; justify-content:space-between; align-items:center; }
+  .status { font-weight:normal; font-size:12px; color:#d4f1c5; }
+  .chat-messages { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; position:relative; }
+
+  .message { 
+    max-width:70%; 
+    margin-bottom:10px; 
+    padding:10px; 
+    border-radius:7px; 
+    position:relative; 
+    word-wrap:break-word; 
+  }
+
+  .message.sent { align-self:flex-end; background-color:#dcf8c6; }
+  .message.received { align-self:flex-start; background-color:#fff; border:1px solid #ccc; }
+
+  .timestamp {
+    font-size:10px; color:gray; text-align:right; margin-top:2px; 
+    display:flex; align-items:center; justify-content:flex-end; gap:4px;
+  }
+
+  .delete-btn {
+    display:none;
+    background:transparent;
+    border:none;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  .message.sent:hover .delete-btn {
+    display:inline;
+  }
+
+  .chat-input { display:flex; padding:10px; border-top:1px solid #ccc; background-color:#f0f0f0; }
+  .chat-input input[type="file"] { display:none; }
+  .chat-input label { margin-right:10px; cursor:pointer; }
+  .chat-input input[type="text"] { flex:1; padding:8px 10px; border-radius:20px; border:1px solid #ccc; outline:none; }
+  .chat-input button { margin-left:10px; background-color:#075e54; color:#fff; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; }
+  .chat-input button:hover { background-color:#128c7e; }
+
+  .confirm-dialog {
+    position:fixed;
+    top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.4);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    visibility:hidden;
+    opacity:0;
+    transition:opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  .confirm-dialog.show {
+    visibility:visible;
+    opacity:1;
+  }
+
+  .confirm-box {
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    width:280px;
+    text-align:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .confirm-box h3 { margin-bottom:10px; font-size:16px; }
+  .confirm-buttons {
+    margin-top:15px;
+    display:flex;
+    justify-content:space-around;
+  }
+
+  .confirm-buttons button {
+    border:none; border-radius:5px;
+    padding:8px 15px; cursor:pointer; font-weight:600;
+  }
+
+  .confirm-buttons .yes {
+    background-color:#d9534f; color:white;
+  }
+
+  .confirm-buttons .no {
+    background-color:#ccc; color:black;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">
+    <h2 id="chatWithName">Chat</h2>
+    <span class="status">Online</span>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input">
+    <label for="fileInput">📷</label>
+    <input type="file" id="fileInput" accept="image/*">
+    <input type="text" id="messageInput" placeholder="Type a message">
+    <button id="sendBtn">Send</button>
+  </div>
+</div>
+
+<div class="confirm-dialog" id="confirmDialog">
+  <div class="confirm-box">
+    <h3>Delete this message?</h3>
+    <div class="confirm-buttons">
+      <button class="yes">Delete</button>
+      <button class="no">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabaseUrl = "https://bipgnekdneqimjopldqo.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcGduZWtkbmVxaW1qb3BsZHFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzODExNTQsImV4cCI6MjA3Njk1NzE1NH0.KN5x779xsaJD6Aw9W6Q9I_E4DvlM7bAG7LilsW0GGtU";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+const chatWith = JSON.parse(localStorage.getItem("chatWith"));
+
+if (!loggedInUser || !chatWith) {
+  alert("Missing user info. Go back to home.");
+  window.location.href = "home.html";
+}
+
+const chatHeader = document.getElementById("chatWithName");
+const chatMessages = document.getElementById("chatMessages");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const fileInput = document.getElementById("fileInput");
+const confirmDialog = document.getElementById("confirmDialog");
+const yesBtn = confirmDialog.querySelector(".yes");
+const noBtn = confirmDialog.querySelector(".no");
+
+chatHeader.textContent = chatWith.full_name || chatWith.epicid;
+
+let messageToDelete = null;
+
+// ✅ Display messages
+function displayMessage(content, type = "sent", time = null, id = null, isImage = false) {
+  const msg = document.createElement("div");
+  msg.classList.add("message", type);
+  msg.dataset.id = id;
+
+  if (isImage) {
+    const img = document.createElement("img");
+    img.src = content;
+    img.style.maxWidth = "200px";
+    img.style.borderRadius = "8px";
+    msg.appendChild(img);
+  } else {
+    msg.textContent = content;
+  }
+
+  const timestamp = document.createElement("div");
+  timestamp.classList.add("timestamp");
+  timestamp.textContent = time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  if (type === "sent") {
+    const delBtn = document.createElement("button");
+    delBtn.classList.add("delete-btn");
+    delBtn.textContent = "🗑";
+    delBtn.onclick = () => {
+      messageToDelete = { id, element: msg, isImage, content };
+      confirmDialog.classList.add("show");
+    };
+    timestamp.appendChild(delBtn);
+  }
+
+  msg.appendChild(timestamp);
+  chatMessages.appendChild(msg);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ✅ Updated delete function
+yesBtn.onclick = async () => {
+  if (messageToDelete) {
+    try {
+      // Delete image from bucket if it's an image message
+      if (messageToDelete.isImage && messageToDelete.content.includes("chat_images")) {
+        const parts = messageToDelete.content.split("/");
+        const fileName = parts[parts.length - 1].split("?")[0];
+        const { error: delError } = await supabase.storage.from("chat_images").remove([fileName]);
+        if (delError) console.error("Image delete error:", delError);
+      }
+
+      // Delete from messages table
+      const { error } = await supabase.from("messages").delete().eq("id", messageToDelete.id);
+      if (!error) messageToDelete.element.remove();
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  }
+  messageToDelete = null;
+  confirmDialog.classList.remove("show");
+};
+
+noBtn.onclick = () => {
+  messageToDelete = null;
+  confirmDialog.classList.remove("show");
+};
+
+// --- Load messages ---
+async function loadMessages() {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .or(`and(sender_id.eq.${loggedInUser.id},receiver_id.eq.${chatWith.id}),and(sender_id.eq.${chatWith.id},receiver_id.eq.${loggedInUser.id})`)
+    .order("created_at", { ascending: true });
+
+  if (error) return console.error("Load error:", error);
+
+  chatMessages.innerHTML = "";
+  data.forEach(m => {
+    const type = m.sender_id === loggedInUser.id ? "sent" : "received";
+    const isImage = m.content.startsWith("https://");
+    displayMessage(m.content, type, new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), m.id, isImage);
+  });
+}
+// --- Auto delete messages older than 24 hours ---
+// --- Auto delete messages older than 24 hours (with image cleanup) ---
+async function autoDeleteOldMessages() {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  try {
+    // 1️⃣ Fetch messages older than 24 hours
+    const { data: oldMessages, error: fetchError } = await supabase
+      .from("messages")
+      .select("*")
+      .lt("created_at", cutoff);
+
+    if (fetchError) {
+      console.error("Fetch old messages error:", fetchError);
+      return;
+    }
+
+    // 2️⃣ Extract and delete image files linked to those messages
+    const imageFiles = oldMessages
+      .filter(m => m.content.includes("chat_images"))
+      .map(m => {
+        const parts = m.content.split("/");
+        return parts[parts.length - 1].split("?")[0];
+      });
+
+    if (imageFiles.length > 0) {
+      const { error: delImgError } = await supabase
+        .storage
+        .from("chat_images")
+        .remove(imageFiles);
+      if (delImgError) console.error("Image cleanup error:", delImgError);
+    }
+
+    // 3️⃣ Delete the messages themselves
+    const { error: delMsgError } = await supabase
+      .from("messages")
+      .delete()
+      .lt("created_at", cutoff);
+
+    if (delMsgError) console.error("Auto delete messages error:", delMsgError);
+    else console.log(`🧹 Cleaned ${oldMessages.length} old messages`);
+  } catch (err) {
+    console.error("Auto delete error:", err);
+  }
+}
+
+// --- Upload image ---
+fileInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const filePath = `${Date.now()}_${Math.floor(Math.random() * 100000)}.jpg`;
+  const { data, error } = await supabase.storage.from("chat_images").upload(filePath, file);
+  if (error) return console.error("Upload error:", error);
+
+  const { data: urlData } = supabase.storage.from("chat_images").getPublicUrl(filePath);
+  const imageUrl = urlData.publicUrl;
+
+  const { data: msgData, error: msgError } = await supabase.from("messages").insert([
+    { sender_id: loggedInUser.id, receiver_id: chatWith.id, content: imageUrl }
+  ]).select();
+
+  if (!msgError && msgData?.length) {
+    displayMessage(imageUrl, "sent", new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), msgData[0].id, true);
+  }
+
+  e.target.value = "";
+});
+
+// --- Realtime updates ---
+const channel = supabase
+  .channel("public:messages")
+  .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, payload => {
+    const m = payload.new;
+    if (m.sender_id === chatWith.id && m.receiver_id === loggedInUser.id) {
+      const isImage = m.content.startsWith("https://");
+      displayMessage(m.content, "received", new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), m.id, isImage);
+    }
+  })
+  .on("postgres_changes", { event: "DELETE", schema: "public", table: "messages" }, payload => {
+    const msgEl = chatMessages.querySelector(`[data-id="${payload.old.id}"]`);
+    if (msgEl) msgEl.remove();
+  })
+  .subscribe();
+
+loadMessages();
+</script>
+</body>
+</html>
